@@ -1,0 +1,330 @@
+import React, { useState, useMemo } from 'react';
+import { Plus, Trash2, Printer, Building2, Hash, FileText } from 'lucide-react';
+
+const App = () => {
+  // --- State Management ---
+  const [companyInfo, setCompanyInfo] = useState({
+    name: 'Your Company Name',
+    address: '123 Business Avenue, Hong Kong',
+    email: 'contact@company.com',
+    phone: '+852 0000 0000',
+  });
+
+  const [receiptMeta, setReceiptMeta] = useState({
+    number: `REC-${Math.floor(1000 + Math.random() * 9000)}`,
+    date: new Date().toISOString().split('T')[0],
+    currency: 'HKD',
+  });
+
+  const [items, setItems] = useState([
+    { id: crypto.randomUUID(), name: 'Consulting Service', quantity: 1, price: 150.00 },
+  ]);
+
+  const [note, setNote] = useState('Thank you for your business!');
+
+  // --- Calculations ---
+  const total = useMemo(() => {
+    return items.reduce((acc, item) => acc + (item.quantity * item.price), 0);
+  }, [items]);
+
+  // --- Handlers ---
+  const handleAddItem = () => {
+    setItems([...items, { id: crypto.randomUUID(), name: '', quantity: 1, price: 0 }]);
+  };
+
+  const handleRemoveItem = (id) => {
+    if (items.length > 1) {
+      setItems(items.filter(item => item.id !== id));
+    }
+  };
+
+  const handleItemChange = (id, field, value) => {
+    setItems(items.map(item => {
+      if (item.id === id) {
+        return { ...item, [field]: value };
+      }
+      return item;
+    }));
+  };
+
+  const getCurrencySymbol = (curr) => {
+    switch (curr) {
+      case 'HKD': return 'HK$ ';
+      case 'USD': return '$';
+      case 'EUR': return '€';
+      case 'GBP': return '£';
+      case 'INR': return '₹';
+      default: return '$';
+    }
+  };
+
+  const handlePrint = () => {
+    window.print();
+  };
+
+  return (
+    <div className="min-h-screen bg-slate-50 p-4 md:p-8 font-sans text-slate-900">
+      {/* Print Styles */}
+      <style>{`
+        @media print {
+          body { background: white !important; }
+          .no-print { display: none !important; }
+          .print-only { display: block !important; }
+          .receipt-container { 
+            box-shadow: none !important; 
+            border: none !important; 
+            padding: 0 !important;
+            margin: 0 !important;
+            width: 100% !important;
+          }
+          @page { margin: 1cm; }
+        }
+      `}</style>
+
+      <div className="max-w-6xl mx-auto">
+        {/* Header */}
+        <header className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4 no-print">
+          <div>
+            <h1 className="text-3xl font-bold text-indigo-900">Receipt Generator</h1>
+            <p className="text-slate-500">Professional receipts for HK transactions</p>
+          </div>
+          <button
+            onClick={handlePrint}
+            className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-lg font-semibold shadow-lg transition-all transform active:scale-95"
+          >
+            <Printer size={20} />
+            Export to PDF / Print
+          </button>
+        </header>
+
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+          
+          {/* Form Side - Left */}
+          <div className="lg:col-span-5 space-y-6 no-print">
+            <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+              <h2 className="text-lg font-bold mb-4 flex items-center gap-2 text-indigo-800">
+                <Building2 size={18} /> Company Details
+              </h2>
+              <div className="space-y-4">
+                <input
+                  type="text"
+                  placeholder="Company Name"
+                  className="w-full p-2 border border-slate-200 rounded focus:ring-2 focus:ring-indigo-500 outline-none"
+                  value={companyInfo.name}
+                  onChange={(e) => setCompanyInfo({ ...companyInfo, name: e.target.value })}
+                />
+                <textarea
+                  placeholder="Address"
+                  className="w-full p-2 border border-slate-200 rounded focus:ring-2 focus:ring-indigo-500 outline-none h-20"
+                  value={companyInfo.address}
+                  onChange={(e) => setCompanyInfo({ ...companyInfo, address: e.target.value })}
+                />
+                <div className="grid grid-cols-2 gap-4">
+                  <input
+                    type="email"
+                    placeholder="Email"
+                    className="w-full p-2 border border-slate-200 rounded focus:ring-2 focus:ring-indigo-500 outline-none"
+                    value={companyInfo.email}
+                    onChange={(e) => setCompanyInfo({ ...companyInfo, email: e.target.value })}
+                  />
+                  <input
+                    type="text"
+                    placeholder="Phone"
+                    className="w-full p-2 border border-slate-200 rounded focus:ring-2 focus:ring-indigo-500 outline-none"
+                    value={companyInfo.phone}
+                    onChange={(e) => setCompanyInfo({ ...companyInfo, phone: e.target.value })}
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+              <h2 className="text-lg font-bold mb-4 flex items-center gap-2 text-indigo-800">
+                <Hash size={18} /> Receipt Settings
+              </h2>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-500 mb-1">Receipt #</label>
+                  <input
+                    type="text"
+                    className="w-full p-2 border border-slate-200 rounded focus:ring-2 focus:ring-indigo-500 outline-none"
+                    value={receiptMeta.number}
+                    onChange={(e) => setReceiptMeta({ ...receiptMeta, number: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-500 mb-1">Date</label>
+                  <input
+                    type="date"
+                    className="w-full p-2 border border-slate-200 rounded focus:ring-2 focus:ring-indigo-500 outline-none"
+                    value={receiptMeta.date}
+                    onChange={(e) => setReceiptMeta({ ...receiptMeta, date: e.target.value })}
+                  />
+                </div>
+                <div className="col-span-2">
+                  <label className="block text-xs font-semibold text-slate-500 mb-1">Currency</label>
+                  <select
+                    className="w-full p-2 border border-slate-200 rounded focus:ring-2 focus:ring-indigo-500 outline-none"
+                    value={receiptMeta.currency}
+                    onChange={(e) => setReceiptMeta({ ...receiptMeta, currency: e.target.value })}
+                  >
+                    <option value="HKD">HKD (HK$)</option>
+                    <option value="USD">USD ($)</option>
+                    <option value="EUR">EUR (€)</option>
+                    <option value="GBP">GBP (£)</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-lg font-bold flex items-center gap-2 text-indigo-800">
+                  <FileText size={18} /> Items List
+                </h2>
+                <button
+                  onClick={handleAddItem}
+                  className="p-1 bg-indigo-50 text-indigo-600 rounded-full hover:bg-indigo-100 transition-colors"
+                >
+                  <Plus size={20} />
+                </button>
+              </div>
+              <div className="space-y-4">
+                {items.map((item) => (
+                  <div key={item.id} className="p-4 border border-slate-100 rounded-lg bg-slate-50 relative group">
+                    <button
+                      onClick={() => handleRemoveItem(item.id)}
+                      className="absolute -top-2 -right-2 bg-red-100 text-red-500 p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                    <div className="grid grid-cols-1 gap-3">
+                      <input
+                        type="text"
+                        placeholder="Item name"
+                        className="w-full p-2 border border-slate-200 rounded focus:ring-2 focus:ring-indigo-500 outline-none bg-white"
+                        value={item.name}
+                        onChange={(e) => handleItemChange(item.id, 'name', e.target.value)}
+                      />
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">Qty</label>
+                          <input
+                            type="number"
+                            className="w-full p-2 border border-slate-200 rounded focus:ring-2 focus:ring-indigo-500 outline-none bg-white"
+                            value={item.quantity}
+                            onChange={(e) => handleItemChange(item.id, 'quantity', Number(e.target.value))}
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">Price</label>
+                          <input
+                            type="number"
+                            className="w-full p-2 border border-slate-200 rounded focus:ring-2 focus:ring-indigo-500 outline-none bg-white"
+                            value={item.price}
+                            onChange={(e) => handleItemChange(item.id, 'price', Number(e.target.value))}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Preview Side - Right */}
+          <div className="lg:col-span-7">
+            <div className="sticky top-8">
+              <div className="receipt-container bg-white p-8 md:p-12 shadow-2xl rounded-none border border-slate-200 min-h-[842px] mx-auto w-full max-w-[595pt]">
+                {/* Receipt Header */}
+                <div className="flex justify-between items-start border-b-2 border-slate-100 pb-8 mb-8">
+                  <div>
+                    <h2 className="text-3xl font-black text-indigo-600 tracking-tighter uppercase">{companyInfo.name || 'Your Company'}</h2>
+                    <div className="mt-4 text-slate-500 text-sm leading-relaxed">
+                      <p>{companyInfo.address}</p>
+                      <p>{companyInfo.email}</p>
+                      <p>{companyInfo.phone}</p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <h3 className="text-4xl font-light text-slate-300 uppercase tracking-widest">Receipt</h3>
+                    <div className="mt-4 text-sm text-slate-600">
+                      <p><span className="font-bold text-slate-400">No:</span> {receiptMeta.number}</p>
+                      <p><span className="font-bold text-slate-400">Date:</span> {new Date(receiptMeta.date).toLocaleDateString('en-HK', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Receipt Content */}
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="border-b-2 border-slate-200">
+                      <th className="py-4 font-bold text-slate-500 uppercase text-xs tracking-wider">Description</th>
+                      <th className="py-4 font-bold text-slate-500 uppercase text-xs tracking-wider text-center">Qty</th>
+                      <th className="py-4 font-bold text-slate-500 uppercase text-xs tracking-wider text-right">Price</th>
+                      <th className="py-4 font-bold text-slate-500 uppercase text-xs tracking-wider text-right">Total</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {items.map((item) => (
+                      <tr key={item.id}>
+                        <td className="py-5 text-slate-700 font-medium">{item.name || 'Unnamed Item'}</td>
+                        <td className="py-5 text-slate-600 text-center">{item.quantity}</td>
+                        <td className="py-5 text-slate-600 text-right">
+                          {getCurrencySymbol(receiptMeta.currency)}{item.price.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                        </td>
+                        <td className="py-5 text-slate-900 font-bold text-right">
+                          {getCurrencySymbol(receiptMeta.currency)}{(item.quantity * item.price).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+
+                {/* Receipt Totals */}
+                <div className="mt-8 flex justify-end">
+                  <div className="w-64">
+                    <div className="flex justify-between items-center pt-3 border-t-2 border-slate-200">
+                      <span className="text-lg font-bold text-slate-800 uppercase tracking-tight">Amount Due</span>
+                      <span className="text-2xl font-black text-indigo-600">
+                        {getCurrencySymbol(receiptMeta.currency)}{total.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Receipt Footer */}
+                <div className="mt-20 pt-8 border-t border-slate-100">
+                  <h4 className="font-bold text-slate-800 text-sm mb-2 uppercase tracking-tight">Notes</h4>
+                  <p className="text-slate-500 text-sm italic">{note}</p>
+                </div>
+
+                <div className="mt-16 text-center text-[10px] text-slate-300 uppercase tracking-[0.2em]">
+                  Computer Generated Document - No Signature Required
+                </div>
+              </div>
+              
+              {/* Note Editor */}
+              <div className="mt-4 no-print bg-white p-4 rounded-xl border border-slate-200">
+                <label className="block text-xs font-semibold text-slate-500 mb-2">Receipt Footer Note</label>
+                <textarea
+                  className="w-full p-2 text-sm border border-slate-200 rounded outline-none focus:ring-2 focus:ring-indigo-500"
+                  value={note}
+                  onChange={(e) => setNote(e.target.value)}
+                  placeholder="e.g. Terms and conditions, thank you message..."
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <footer className="mt-16 text-center text-slate-400 text-sm no-print">
+        &copy; {new Date().getFullYear()} ReceiptFlow HK. Simple, tax-free billing.
+      </footer>
+    </div>
+  );
+};
+
+export default App;
